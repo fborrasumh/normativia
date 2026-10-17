@@ -415,6 +415,7 @@ table{border-collapse:collapse;width:100%;font-size:13.8px}th{background:var(--p
 .nv-busq li{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--linea-2);list-style:none}.nv-busq{padding-left:0}.nv-busq small{color:var(--aviso)}
 .nv-estima .aviso{margin:8px 0 0}.nv-fuentes{font-size:13.5px;line-height:1.6;max-height:420px;overflow:auto;padding-left:22px}.nv-fuentes a{color:#1F6FB2;word-break:break-word}
 label.btn{cursor:pointer}
+.nv-oculta{-webkit-text-security:disc;text-security:disc}
 </style></head>
 <body>
 <svg style="display:none" aria-hidden="true">
@@ -2912,7 +2913,7 @@ $('btnExcel').onclick = conTry(async () => dl(nombreArch('xlsx'), await informeE
 $('btnZip').onclick = conTry(async () => { const w = await informeWord(), x = await informeExcel(); dl(nombreArch('zip'), await zipDe({[nombreArch('docx')]: w, [nombreArch('xlsx')]: x})); });
 $('btnCsv').onclick = () => { const D = datosInforme(); dl(nombreArch('csv'), csvDe([t('Tabla'), ...CAB()], D.inc.map(f => [t(catN(f.cat)), ...filaDe(f)])), 'text/csv;charset=utf-8'); };
 /* proyecto en JSON: datos en bruto (nunca la clave); al abrirlo se vuelven a hacer todas las comprobaciones */
-$('btnExport').onclick = () => dl(nombreArch('json'), JSON.stringify({formato: 'normativia/1', version: '1.0.0', autores: ['Fernando Borrás Rocher', 'Sergio Valero Verdú'], fecha: new Date().toISOString(), inst: S.inst, ia: S.ia, manual: S.manual, dec: S.dec, cats: S.cats, ejemplo: S.esEjemplo}, null, 1), 'application/json');
+$('btnExport').onclick = () => dl(nombreArch('json'), JSON.stringify({formato: 'normativia/1', version: '1.0.1', autores: ['Fernando Borrás Rocher', 'Sergio Valero Verdú'], fecha: new Date().toISOString(), inst: S.inst, ia: S.ia, manual: S.manual, dec: S.dec, cats: S.cats, ejemplo: S.esEjemplo}, null, 1), 'application/json');
 $('fImport').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try { const j = JSON.parse(await f.text()); if (j.formato !== 'normativia/1' || !j.inst) throw 0;
@@ -2930,7 +2931,17 @@ function aplicaEjemplo() {
 window.addEventListener('langchange', () => { if (S.esEjemplo) { const d = S.dec; aplicaEjemplo(); S.dec = d; guarda(); } });
 
 /* ── arranque ── */
-(async () => { const p = await cargaEstado(); if (p) S = {...S, ...p, inst: {...INST0(), ...(p.inst || {})}}; iniciaUI(); if (S.esEjemplo) aplicaEjemplo(); go(0); })();
+/* Campo de clave a salvo del gestor de contraseñas: todas las apps del catálogo comparten el origen fborrasumh.github.io,
+   y el navegador ofrecía en este campo las claves guardadas en otras apps (por ejemplo, la de Tavily). Un campo de texto
+   enmascarado por CSS no activa el autocompletado de contraseñas. */
+function blindaClave() {
+  const k = $('apiKey'); if (!k) return;
+  k.type = 'text'; k.classList.add('nv-oculta');
+  Object.entries({autocomplete: 'off', name: 'nv-k-' + Math.random().toString(36).slice(2, 8), spellcheck: 'false', autocapitalize: 'off', autocorrect: 'off', 'data-lpignore': 'true', 'data-1p-ignore': 'true', 'data-bwignore': 'true', 'data-form-type': 'other'}).forEach(([a, v]) => k.setAttribute(a, v));
+  if ($('modelo')) $('modelo').setAttribute('autocomplete', 'off');
+  if ($('btnEye')) $('btnEye').onclick = () => k.classList.toggle('nv-oculta');
+}
+(async () => { const p = await cargaEstado(); if (p) S = {...S, ...p, inst: {...INST0(), ...(p.inst || {})}}; iniciaUI(); blindaClave(); if (S.esEjemplo) aplicaEjemplo(); go(0); })();
 
 </script>
 </body></html>
